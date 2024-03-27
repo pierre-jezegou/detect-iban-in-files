@@ -15,27 +15,34 @@ def get_file_type(file_name: str) -> str:
     return extension.lower()
 
 
-def search_regex_in_pdf(pdf_path: str, regex_pattern: str) -> list[str] | None:
-    '''Return text which matches regex pattern in a pdf file'''
+def extract_text_pdf(pdf_path: str) -> str | None:
+    '''Extract text from a pdf file'''
     with open(pdf_path, 'rb') as pdf_file:
         pdf_reader = PyPDF2.PdfFileReader(pdf_file)
         text = ''
         for page_num in range(pdf_reader.numPages):
             page_text = pdf_reader.getPage(page_num).extractText()
             text += page_text
-    matches = re.findall(regex_pattern, text)
-    return matches
+        return text
 
 
-def search_regex_in_image(image_path: str, regex_pattern: str) -> list[str] | None:
-    '''Return text which matches regex pattern in an image file'''
+def extract_text_image(image_path: str) -> str | None:
+    '''Extract text from an image file'''
     text = pytesseract.image_to_string(Image.open(image_path))
+    return text
+
+
+def search_regex(text: str | None, regex_pattern: str) -> list[str] | None:
+    '''Search regex_pattern in a given text'''
+    if text is None:
+        return None
+
     matches = re.findall(regex_pattern, text)
     return matches
 
 
 def format_iban(iban_str: str, expected_format_regex: str) -> str:
-    '''Format '''
+    '''Format IBAN'''
     cleaned_iban = iban_str.replace(" ", "")
     if re.match(expected_format_regex, cleaned_iban):
         return cleaned_iban.upper()
@@ -61,11 +68,13 @@ def detect_target_iban(filename: str,
     extension = get_file_type(filename)
 
     if extension == '.pdf':
-        matches = search_regex_in_pdf(filename, iban_raw_regex)
+        text = extract_text_pdf(filename)
     elif extension in ['.png', '.jpg', '.jpeg']:
-        matches = search_regex_in_image(filename, iban_raw_regex)
+        text = extract_text_image(filename)
     else:
         raise TypeError('Format non connu')
+
+    matches = search_regex(text, iban_raw_regex)
 
     if matches is None:
         return returned_dic
