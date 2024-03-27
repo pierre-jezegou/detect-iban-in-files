@@ -9,11 +9,7 @@ IBAN_CLEANED_REGEX = r'([A-Z]{2}\d{2}(?:\d{4}){5}\d{1,4})'
 TARGET_IBAN = 'FR7616706050875394140728132'
 
 
-def get_file_type(file_name: str) -> str:
-    '''Return file extension'''
-    _, extension = os.path.splitext(file_name)
-    return extension.lower()
-
+# EXTRACT TEXT FROM FILES
 
 def extract_text_pdf(pdf_path: str) -> str | None:
     '''Extract text from a pdf file'''
@@ -41,6 +37,15 @@ def search_regex(text: str | None, regex_pattern: str) -> list[str] | None:
     return matches
 
 
+def get_file_type(file_name: str) -> str:
+    '''Return file extension'''
+    _, extension = os.path.splitext(file_name)
+    return extension.lower()
+
+
+
+# IBAN RELATED FUNCTIONS
+
 def format_iban(iban_str: str, expected_format_regex: str) -> str:
     '''Format IBAN'''
     cleaned_iban = iban_str.replace(" ", "")
@@ -49,49 +54,74 @@ def format_iban(iban_str: str, expected_format_regex: str) -> str:
     raise AssertionError('Iban bad format')
 
 
-def detect_target_iban(filename: str,
+def detect_target_iban(text: str,
                        target_iban: str,
                        iban_raw_regex: str = IBAN_REGEX,
                        iban_cleaned_regex: str = IBAN_CLEANED_REGEX
                        )-> dict:
-    '''Main function : detect IBAN in filename file
+    '''Detect IBAN in a given text'''
+    target_iban_present = False
 
+    matches = search_regex(text, iban_raw_regex)
+    formatted_matches = set()
+
+    if matches is None:
+        return False
+
+    for match in matches:
+        formatted_match = format_iban(match, iban_cleaned_regex)
+        formatted_matches.add(formatted_match)
+    if target_iban in formatted_matches:
+        target_iban_present = True
+
+    return target_iban_present
+
+
+
+
+def extract_gather_information(filename: str,
+                               iban_target: str,
+                               date_needed: bool = True,
+                               amount_needed: bool= True
+                               ) -> dict:
+    '''MAIN FUNCTION :
+        Detect informations from a file
         Accepted extensions :
             - `pdf`
             - images : `png`, `jpg`, `jpeg`
     '''
-    returned_dic = {
-        "iban_presence": False
-    }
 
-    formatted_matches = set()
+    returned_dict = {}
     extension = get_file_type(filename)
 
+    # Extract informations from documents
     if extension == '.pdf':
         text = extract_text_pdf(filename)
     elif extension in ['.png', '.jpg', '.jpeg']:
         text = extract_text_image(filename)
     else:
-        raise TypeError('Format non connu')
+        raise TypeError('Unknown file format')
 
-    matches = search_regex(text, iban_raw_regex)
+    # Get target IBAN presence in extracted text
+    target_present = detect_target_iban(text, iban_target)
+    returned_dict.update({"target_iban_present": target_present})
 
-    if matches is None:
-        return returned_dic
-    for match in matches:
-        formatted_match = format_iban(match, iban_cleaned_regex)
-        formatted_matches.add(formatted_match)
-    if target_iban in formatted_matches:
-        returned_dic["iban_presence"] = True
-    return returned_dic
+    if date_needed:
+        pass
+
+    if amount_needed:
+        pass
+
+    return returned_dict
+
 
 FILENAMES = [
                 'files/fichier1.pdf',
                 'files/fichier2.jpeg',
                 'files/fichier3.pdf',
-                'files/ecl.pdf'
+                # 'files/ecl.pdf'
             ]
 
 if __name__=="__main__":
     for file in FILENAMES:
-        print(detect_target_iban(file, TARGET_IBAN))
+        print(extract_gather_information(file, TARGET_IBAN))
