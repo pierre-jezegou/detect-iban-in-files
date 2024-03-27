@@ -1,0 +1,5 @@
+PyPDF2==1.26.0
+pillow==9.0.0
+pytesseract==0.3.8
+setuptools
+pylint
