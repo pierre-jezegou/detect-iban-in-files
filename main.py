@@ -49,7 +49,7 @@ def detect_target_iban(filename: str,
                        )-> dict:
     '''Main function : detect IBAN in filename file
 
-        Accepted extentions :
+        Accepted extensions :
             - `pdf`
             - images : `png`, `jpg`, `jpeg`
     '''
@@ -57,7 +57,7 @@ def detect_target_iban(filename: str,
         "iban_presence": False
     }
 
-    formatted_matches = []
+    formatted_matches = set()
     extension = get_file_type(filename)
 
     if extension == '.pdf':
@@ -71,8 +71,7 @@ def detect_target_iban(filename: str,
         return returned_dic
     for match in matches:
         formatted_match = format_iban(match, iban_cleaned_regex)
-        if not formatted_match in formatted_matches:
-            formatted_matches.append(formatted_match)
+        formatted_matches.add(formatted_match)
     if target_iban in formatted_matches:
         returned_dic["iban_presence"] = True
     return returned_dic
@@ -80,7 +79,8 @@ def detect_target_iban(filename: str,
 FILENAMES = [
                 'files/fichier1.pdf',
                 'files/fichier2.jpeg',
-                'files/fichier3.pdf'
+                'files/fichier3.pdf',
+                'files/ecl.pdf'
             ]
 
 if __name__=="__main__":
