@@ -6,7 +6,7 @@ import pytesseract
 
 IBAN_REGEX = r'([A-Z]{2}\s?\d{2}\s?(?:\d{4}\s?){5}\d{1,4})'
 IBAN_CLEANED_REGEX = r'([A-Z]{2}\d{2}(?:\d{4}){5}\d{1,4})'
-TARGET_IBAN = 'FR7611111111111111111111111'
+TARGET_IBAN = 'FR7616706050875394140728132'
 
 
 # EXTRACT TEXT FROM FILES
